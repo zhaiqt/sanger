@@ -39,24 +39,14 @@ class Merge2FastQ():
         #print "$$$$$$"
         couple_list=[]
         #for cut_off in [15, 20, 25, 30, 35, 40]:
-        for cut_off in [20]:
-            object1 = TrimEnds.TrimEnds(self._fastQ1)
-            object1.trimEnds(minimum_quality=cut_off)
-            fastQ1 = object1.output_trimed_fastq()
-            firstSeq =fastQ1[1]
+        fastQ1 = self._fastQ1
+        fastQ2 = self._fastQ2
+        firstSeq = fastQ1[1]
+        secondSeq = fastQ2[1]
 
-            object2 = TrimEnds.TrimEnds(self._fastQ2)
-            object2.trimEnds(minimum_quality=cut_off)
-            fastQ2 = object2.output_trimed_fastq()
-            secondSeq =fastQ2[1]
+        for cut_off in [15, 20, 25, 30, 35, 40]:
 
-            # if cut_off == 15:
-            #     print 'cut_off == 15'
-            #     print self._fastQ2
-            #     print fastQ2
-            #     print self._fastQ1
-            #     print fastQ1
-            #     print 'cut_off == 15'
+
             if not firstSeq and not secondSeq:
                     print " firstSeq and not secondSeq empty"
                     couple_list.append(('',''))
@@ -72,21 +62,21 @@ class Merge2FastQ():
 
 
             #print "-------- caculate assemb1--------"
-            (overlap_seq1,assembleSeq1) = self.find_overlap(fastQ1,fastQ2)
+            (overlap_seq1,assembleSeq1) = self.find_overlap(fastQ1,fastQ2,cut_off)
             couple_list.append((overlap_seq1,assembleSeq1))
             #print "-------- caculate assemb2--------"
-            (overlap_seq2,assembleSeq2) =self.find_overlap(fastQ2,fastQ1)
+            (overlap_seq2,assembleSeq2) =self.find_overlap(fastQ2,fastQ1,cut_off)
             couple_list.append((overlap_seq2,assembleSeq2))
             #print "-------- caculate assemb3--------"
             antiSense_fastQ2= translator.reverse_complement_FastQ(fastQ2)
-            (overlap_seq3,assembleSeq3) = self.find_overlap(fastQ1,antiSense_fastQ2)
+            (overlap_seq3,assembleSeq3) = self.find_overlap(fastQ1,antiSense_fastQ2,cut_off)
             couple_list.append((overlap_seq3,assembleSeq3))
             #print "-------- caculate assemb4 reverse both A and B--------"
             antiSense_fastQ1 = translator.reverse_complement_FastQ(fastQ1)
-            (overlap_seq4,assembleSeq4) = self.find_overlap(antiSense_fastQ2,antiSense_fastQ1)
+            (overlap_seq4,assembleSeq4) = self.find_overlap(antiSense_fastQ2,antiSense_fastQ1,cut_off)
             couple_list.append((overlap_seq4,assembleSeq4))
             #print "-------- caculate assemb5 reverse both A and B--------"
-            (overlap_seq5,assembleSeq5) = self.find_overlap(antiSense_fastQ1,antiSense_fastQ2)
+            (overlap_seq5,assembleSeq5) = self.find_overlap(antiSense_fastQ1,antiSense_fastQ2,cut_off)
             couple_list.append((overlap_seq5,assembleSeq5))
 
 
@@ -112,15 +102,17 @@ class Merge2FastQ():
         self._fastQ2[0]=longName2[0].lstrip('@')
         return
 
-    def find_overlap(self,inputfastq1,inputfastq2):
-        #print "Running ~~~~~~~ find_overlap~~~~~~~~~ "
-        firstSeq=inputfastq1[1]
-        secondSeq=inputfastq2[1]
-        fastQ1= inputfastq1
-        fastQ2 = inputfastq2
+    def find_overlap(self,inputfastq1,inputfastq2,trimcutoff):
 
-        #print ">1 \n " +firstSeq
-        #print ">2 \n "+secondSeq
+        object1 = TrimEnds.TrimEnds(inputfastq1)
+        object1.trim5End(minimum_quality=trimcutoff)
+        fastQ1 = object1.output_trimed_fastq()
+        firstSeq =fastQ1[1]
+
+        object2 = TrimEnds.TrimEnds(inputfastq2)
+        object2.trim3End(minimum_quality=trimcutoff)
+        fastQ2 = object2.output_trimed_fastq()
+        secondSeq =fastQ2[1]
 
 
         overlap_position=firstSeq.rfind(secondSeq[-self._overlapNumber:])

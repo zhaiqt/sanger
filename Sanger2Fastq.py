@@ -5,7 +5,7 @@ import Merge2FastQ
 import logging
 import csv
 
-from Bio import SeqIO
+
 
 outfilePath='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/results/'
 
@@ -91,8 +91,13 @@ def convert_fastqdict_fastadict(fastqdict):
     outfilename1= outfilePath + "count.csv"
     outfile1 = open(outfilename1,'wb')
     outfile1.write ("ID,seq1,seq2,seq1_length, seq2_length, assembed_seq, assembed_length\n")
-    #outfilename2= outfilePath+"short_fastq.txt"
-    #outfile1 = open(outfilename1,'wb')
+
+    outfilename2 = outfilePath + "assembled.fasta"
+    outfile2 = open(outfilename2,'wb')
+
+    outfilename3 = outfilePath + "non_assembled.fasta"
+    outfile3 = open(outfilename3,'wb')
+
 
     all_fasta_dict={}
     for key,value in fastqdict.iteritems():
@@ -100,16 +105,23 @@ def convert_fastqdict_fastadict(fastqdict):
         objectFastA=Merge2FastQ.Merge2FastQ(value) #apply Merge2FastQ class
         objectFastA.anneal2fastq()
         single_fasta= objectFastA.output_fasta()
-        print "^^^^^^^^"
-        print single_fasta
+
         all_fasta_dict[key]= single_fasta
 
         output ="%s,%s,%d,%s,%d,%s,%d\n" %(key,value[0][1],len(value[0][1]),value[1][1],len(value[1][1]),single_fasta,len(single_fasta))
         outfile1.write(output)
 
-        if len(single_fasta) < 300:
-            logging.info(value)
-
+        if len(single_fasta) > 300:
+            output= ">" +key+"\n"+single_fasta+"\n"
+            outfile2.write(output)
+        else:
+            output = ">" + key +"_1\n" + value[0][1]+"\n"
+            outfile3.write(output)
+            output = ">" + key +"_2\n" + value[1][1]+'\n'
+            outfile3.write(output)
+    outfile1.close()
+    outfile2.close()
+    outfile3.close()
     return all_fasta_dict
 
 
@@ -201,12 +213,14 @@ print "%i records written to %s" % (count, file_out)
 ##########
 
 
-
+inputzip='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/Ab1_all.zip'
+outfilePath='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/results/'
+extract_zip(inputzip,outfilePath)
 #F_abi_file='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/F.zip'
 #R_abi_file='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/R.zip'
 all_abi_file='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/Ab1_all/'
 #all_abi_file='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/all/'
-outfilePath='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/results/'
+#outfilePath='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/results/'
 
 
 # log_file = outfilePath+'runlog.txt'
@@ -225,7 +239,7 @@ concentrate2single('/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/res
 
 fastadict=merge_FASTQ_files(outfilePath+'all',outfilePath+'all.fastq' )
 
-writeFasta(fastadict,outfilePath+'all.fasta')
+#writeFasta(fastadict,outfilePath+'all.fasta')
 print outfilePath+'all.fasta'
 
 # merge_fastq(outfilePath+'F.fastq',outfilePath+'R.fastq',outfilePath+'merge.fastq')
