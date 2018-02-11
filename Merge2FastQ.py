@@ -81,7 +81,7 @@ class Merge2FastQ():
 
 
         longest_overlap=('','')
-        print couple_list
+        #print couple_list
         for tmp_couple in couple_list:
             if len(tmp_couple[0])>200 and  len(tmp_couple[1]) > len(longest_overlap[1]):
                 longest_overlap = tmp_couple
