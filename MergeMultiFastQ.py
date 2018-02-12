@@ -47,7 +47,7 @@ def Contig_2Fastq_Fasta(fastqdict,outfilePath):
     print "running Contig_2Fastq_Fasta"
     outfilename1= os.path.join (outfilePath , "count.csv")
     outfile1 = open(outfilename1,'wb')
-    outfile1.write ("ID,seq1,seq1_length,seq2,seq2_length, assembed_seq, assembed_length, mismatch in overlap \n")
+    outfile1.write ("ID,seq1,seq1_length,seq2,seq2_length, assembed_seq, assembed_length, mismatch in overlap, lenth of match \n")
 
     outfilename2 = os.path.join (outfilePath ,"assembled.fasta")
     outfile2 = open(outfilename2,'wb')
@@ -64,10 +64,10 @@ def Contig_2Fastq_Fasta(fastqdict,outfilePath):
         objectFastA.anneal2fastq()
         single_fasta= objectFastA.output_fasta()
         mismach_count=objectFastA.output_mismatch_count()
-
+        overlap_seq=objectFastA.output_overlap()
         all_fasta_dict[key]= single_fasta
 
-        output ="%s,%s,%d,%s,%d,%s,%d,%d\n" %(key,value[0][1],len(value[0][1]),value[1][1],len(value[1][1]),single_fasta,len(single_fasta),mismach_count)
+        output ="%s,%s,%d,%s,%d,%s,%d,%d,%d\n" %(key,value[0][1],len(value[0][1]),value[1][1],len(value[1][1]),single_fasta,len(single_fasta),mismach_count,len(overlap_seq))
         outfile1.write(output)
 
         if len(single_fasta) > 300:

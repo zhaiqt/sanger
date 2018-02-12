@@ -17,6 +17,7 @@ class Merge2FastQ():
         self._fastQ1=pairQ2[0]
         self._fastQ2=translator.reverse_complement_FastQ(pairQ2[1]) # from now on, fastQ are sense strand
         self._overlap_seq=''
+        self._overlapNumber =overlap_baseNumber
         self._assemble_seq=''
         #self._assemble_fastq =[]
         self._mismatch_count=0
@@ -40,6 +41,8 @@ class Merge2FastQ():
     def output_mismatch_count(self):
         return self._mismatch_count
 
+    def output_overlap(self):
+        return self._overlap_seq
 
     def anneal2fastq(self):
         #print "$$$$$$"
@@ -71,8 +74,8 @@ class Merge2FastQ():
             (overlap_seq1,assembleSeq1,mismatch1) = self.find_overlap(fastQ1,fastQ2,cut_off)
             couple_list.append((overlap_seq1,assembleSeq1,mismatch1))
             #print "-------- caculate assemb2--------"
-            (overlap_seq2,assembleSeq2,mismatch1) =self.find_overlap(fastQ2,fastQ1,cut_off)
-            couple_list.append((overlap_seq2,assembleSeq2,mismatch1))
+            (overlap_seq2,assembleSeq2,mismatch2) =self.find_overlap(fastQ2,fastQ1,cut_off)
+            couple_list.append((overlap_seq2,assembleSeq2,mismatch2))
             #print "-------- caculate assemb3--------"
             antiSense_fastQ2= translator.reverse_complement_FastQ(fastQ2)
             (overlap_seq3,assembleSeq3,mismatch3) = self.find_overlap(fastQ1,antiSense_fastQ2,cut_off)
@@ -91,12 +94,14 @@ class Merge2FastQ():
         for tmp_couple in couple_list:
             if len(tmp_couple[0])>200 and  len(tmp_couple[1]) > len(longest_overlap[1]):
                 longest_overlap = tmp_couple
-        assembled_fasta = longest_overlap[1]
+
 
         # if len(assembled_fasta) > 100:
         #     print "assembled_fasta: "+ assembled_fasta
-        self._assemble_seq = assembled_fasta
+        self._overlap_seq = longest_overlap[0]
+        self._assemble_seq = longest_overlap[1]
         self._mismatch_count = longest_overlap[2]
+
         return
 
 
@@ -134,6 +139,13 @@ class Merge2FastQ():
             (overlap_seq, mismatchcount)=self.overlap_consensus(overlapAQ, overlapBQ)
 
             assembleSeq=fastQ2[1][:-overlap_length]+ overlap_seq + fastQ1[1][overlap_length:]
+
+            '''
+            try:
+                mismatch_percent =mismatchcount/len(overlap_seq)
+            except:
+                mismatch_percent =0
+            '''
 
             return (overlap_seq,assembleSeq,mismatchcount)
         else:
