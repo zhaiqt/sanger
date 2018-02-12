@@ -16,8 +16,11 @@ class Merge2FastQ():
         self._merged=[]
         self._fastQ1=pairQ2[0]
         self._fastQ2=translator.reverse_complement_FastQ(pairQ2[1]) # from now on, fastQ are sense strand
-        self._overlapNumber =overlap_baseNumber
-        self._assemble_seq=""
+        self._overlap_seq=''
+        self._assemble_seq=''
+        #self._assemble_fastq =[]
+        self._mismatch_count=0
+
 
 
 
@@ -33,6 +36,9 @@ class Merge2FastQ():
 
     def output_fasta(self):
         return self._assemble_seq
+
+    def output_mismatch_count(self):
+        return self._mismatch_count
 
 
     def anneal2fastq(self):
@@ -62,25 +68,25 @@ class Merge2FastQ():
 
 
             #print "-------- caculate assemb1--------"
-            (overlap_seq1,assembleSeq1) = self.find_overlap(fastQ1,fastQ2,cut_off)
-            couple_list.append((overlap_seq1,assembleSeq1))
+            (overlap_seq1,assembleSeq1,mismatch1) = self.find_overlap(fastQ1,fastQ2,cut_off)
+            couple_list.append((overlap_seq1,assembleSeq1,mismatch1))
             #print "-------- caculate assemb2--------"
-            (overlap_seq2,assembleSeq2) =self.find_overlap(fastQ2,fastQ1,cut_off)
-            couple_list.append((overlap_seq2,assembleSeq2))
+            (overlap_seq2,assembleSeq2,mismatch1) =self.find_overlap(fastQ2,fastQ1,cut_off)
+            couple_list.append((overlap_seq2,assembleSeq2,mismatch1))
             #print "-------- caculate assemb3--------"
             antiSense_fastQ2= translator.reverse_complement_FastQ(fastQ2)
-            (overlap_seq3,assembleSeq3) = self.find_overlap(fastQ1,antiSense_fastQ2,cut_off)
-            couple_list.append((overlap_seq3,assembleSeq3))
+            (overlap_seq3,assembleSeq3,mismatch3) = self.find_overlap(fastQ1,antiSense_fastQ2,cut_off)
+            couple_list.append((overlap_seq3,assembleSeq3,mismatch3))
             #print "-------- caculate assemb4 reverse both A and B--------"
             antiSense_fastQ1 = translator.reverse_complement_FastQ(fastQ1)
-            (overlap_seq4,assembleSeq4) = self.find_overlap(antiSense_fastQ2,antiSense_fastQ1,cut_off)
-            couple_list.append((overlap_seq4,assembleSeq4))
+            (overlap_seq4,assembleSeq4,mismatch4) = self.find_overlap(antiSense_fastQ2,antiSense_fastQ1,cut_off)
+            couple_list.append((overlap_seq4,assembleSeq4,mismatch4))
             #print "-------- caculate assemb5 reverse both A and B--------"
-            (overlap_seq5,assembleSeq5) = self.find_overlap(antiSense_fastQ1,antiSense_fastQ2,cut_off)
-            couple_list.append((overlap_seq5,assembleSeq5))
+            (overlap_seq5,assembleSeq5,mismatch5) = self.find_overlap(antiSense_fastQ1,antiSense_fastQ2,cut_off)
+            couple_list.append((overlap_seq5,assembleSeq5,mismatch5))
 
 
-        longest_overlap=('','')
+        longest_overlap=('','',0)
         #print couple_list
         for tmp_couple in couple_list:
             if len(tmp_couple[0])>200 and  len(tmp_couple[1]) > len(longest_overlap[1]):
@@ -90,6 +96,7 @@ class Merge2FastQ():
         # if len(assembled_fasta) > 100:
         #     print "assembled_fasta: "+ assembled_fasta
         self._assemble_seq = assembled_fasta
+        self._mismatch_count = longest_overlap[2]
         return
 
 
@@ -114,36 +121,23 @@ class Merge2FastQ():
         fastQ2 = object2.output_trimed_fastq()
         secondSeq =fastQ2[1]
 
-
         overlap_position=firstSeq.rfind(secondSeq[-self._overlapNumber:])
-        #print secondSeq[-self._overlapNumber:]
-        #print overlap_position   # Seq A
 
         overlap_seq = ''
-        #print "overlap_position : %d"  % overlap_position
         if (overlap_position > -1):
-            #print "search bait:" + secondSeq[-self._overlapNumber:]
 
-            #overlap_length=min(len(firstSeq[overlap_position:]),len(fastQ2[1]))
             overlap_length=overlap_position+self._overlapNumber
-            #print "overlap_length : %d" % overlap_length
+
             overlapAQ=[fastQ1[1][:overlap_length],fastQ1[3][:overlap_length]]
 
             overlapBQ=[fastQ2[1][-overlap_length:],fastQ2[3][-overlap_length:]]
-            overlap_seq=self.overlap_consensus(overlapAQ, overlapBQ)
-            #print "AQ: " + overlapAQ[0]
-            #print "BQ: " + overlapBQ[0]
-            #print "overlap" +overlap_seq
-            #overlap_seq:
+            (overlap_seq, mismatchcount)=self.overlap_consensus(overlapAQ, overlapBQ)
+
             assembleSeq=fastQ2[1][:-overlap_length]+ overlap_seq + fastQ1[1][overlap_length:]
-            #print "5': " + fastQ2[1][:-overlap_position]
-            #print "3': " +fastQ1[1][overlap_length:]
-            #print len(assembleSeq)
-            #print "length of assembled sequence is %d."  %len(assembleSeq)
-            #print "assembled seq is " + assembleSeq
-            return (overlap_seq,assembleSeq)
+
+            return (overlap_seq,assembleSeq,mismatchcount)
         else:
-            return ('','')
+            return ('','',0)
 
 
 
@@ -167,17 +161,11 @@ class Merge2FastQ():
                 else:
                     overlapSeq +=BQ[0][i]
         if matchCounts >= mismatchCounts *3:
-            return overlapSeq
+            return (overlapSeq,mismatchCounts)
         else:
             #print "Warning!!! can't find overlap."
             #return overlapQB[0]
-            return ""
-            '''
-            if len(AQ[0]) >= len(BQ[0]):
-                return AQ[0]
-            else:
-                return BQ[0]
-            '''
+            return ("",len(AQ))
 
 
 
