@@ -56,18 +56,25 @@ class Merge2FastQ():
         for cut_off in [15, 20, 25, 30, 35, 40]:
 
 
+            object1 = TrimEnds.TrimEnds(fastQ1)
+            object1.trimEnds(minimum_quality=cut_off)
+            fastQ1 = object1.output_trimed_fastq()
+            firstSeq =fastQ1[1]
+
+
             if not firstSeq and not secondSeq:
                     print " firstSeq and not secondSeq empty"
-                    couple_list.append(('',''))
+                    couple_list.append(('','',0))
                     continue
             elif not firstSeq or len(firstSeq) <= self._overlapNumber or firstSeq in secondSeq:
                     print "lif not firstSeq or len(firstSeq) <= self._overlapNumber"
-                    couple_list.append((secondSeq,secondSeq))
+                    couple_list.append((secondSeq,secondSeq,0))
                     continue
             elif not secondSeq or len(secondSeq) <= self._overlapNumber or secondSeq in firstSeq:
                     print "firtseq> 2"
-                    couple_list.append((firstSeq,firstSeq))
+                    couple_list.append((firstSeq,firstSeq,0))
                     continue
+
 
 
             #print "-------- caculate assemb1--------"
@@ -95,13 +102,19 @@ class Merge2FastQ():
             if len(tmp_couple[0])>200 and  len(tmp_couple[1]) > len(longest_overlap[1]):
                 longest_overlap = tmp_couple
 
-
+        '''
+        if longest_overlap[0] ==0:
+            better_fastq =['','','','']
+            better_fastq = choose_one_read(self._fastQ1, self._fastQ2)
+            if better_fastq:
+                longest_overlap=('1',better_fastq[1],1)
+        '''
         # if len(assembled_fasta) > 100:
         #     print "assembled_fasta: "+ assembled_fasta
         self._overlap_seq = longest_overlap[0]
         self._assemble_seq = longest_overlap[1]
         self._mismatch_count = longest_overlap[2]
-
+ 
         return
 
 
@@ -180,7 +193,26 @@ class Merge2FastQ():
             return ("",len(AQ))
 
 
+##########
+    def choose_one_read(inputfastq1,inputfastq2):
 
+        object1 = TrimEnds.TrimEnds(inputfastq1)
+        object1.trimEnds(minimum_quality=30)
+        fastQ1 = object1.output_trimed_fastq()
+        firstSeq =fastQ1[1]
+
+        object2 = TrimEnds.TrimEnds(inputfastq2)
+        object2.trimEnds(minimum_quality=30)
+        fastQ2 = object2.output_trimed_fastq()
+        secondSeq =fastQ2[1]
+
+
+        if len(firstSeq) >= len(secondSeq) and len(firstSeq) > 250:
+            return inputfastq1
+        elif len(firstSeq) < len(secondSeq) and len(secondSeq) > 250:
+            return inputfastq2
+        else:
+            return None
 
 ########################
 '''

@@ -20,6 +20,7 @@ def extract_zip(infile,outfilePath):
 ###############
 def read_sanger(infilepath,outfilepath_All,outfilepath_F,outfilepath_R):
     count_infile = 0
+    print infilepath
     for filename in os.listdir(infilepath):
         #print "infilepath :" +infilepath
         #print filename

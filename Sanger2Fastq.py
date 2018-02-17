@@ -10,7 +10,7 @@ import argparse
 
 #python IDAP384screen.py -i /Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/IDAP384screen/IDAP_5_star/rawdata/ensingle.csv.zip -c /Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/IDAP384screen/IDAP_5_star/rawdata/barcode_Table.csv -o /Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/IDAP384screen/IDAP_5_star/result
 parser = argparse.ArgumentParser( prog='SangerPairSeqContig',description="Read paired-ends sanger sequneces, convert to fastq, and merge the Forward and the reverse reads, -> 1) fasta contains the assembled sequences, 2) fasta with non-assembled sequences", epilog='python Sanger2Fastq -i inputfile.zip  -o outputpath')
-parser.add_argument ('-i','--inputzip',help='Input zipfile', default='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/all.zip')
+parser.add_argument ('-i','--inputzip',help='Input zipfile', default='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/raw/TillerLC.zip')
 parser.add_argument('-o', '--outputpath',help='outputpath for output',default='/Users/zhaiqi1/Documents/Novartis/my_code/ToolBox/sanger/results')
 parser.print_help()
 args=parser.parse_args()
@@ -46,6 +46,8 @@ for dirname in [outfilepath_All,outfilepath_F,outfilepath_R]:
 
 
 #####  convert Abi/ab1 to fastq files#############
+
+
 ReadSanger.read_sanger(abi_path,outfilepath_All,outfilepath_F,outfilepath_R )
 
 F_fastq_path = ReadSanger.concentrate2single (outfilepath_F,args.outputpath)
